@@ -89,8 +89,11 @@ Principais entidades:
 - Pedido;
 - Pagamento.
 
-## 12. Publicação
-A PIT I previu publicação gratuita na Vercel. Na PIT II, este repositório GitHub mantém a documentação e o código do projeto, além de uma versão demonstrativa estática publicada no GitHub Pages.
+## 12. Arquitetura da PIT II
+A PIT II mantém o front-end em React/Vite e acrescenta um back-end em Python com Flask e banco de dados SQLite para registro e consulta de pedidos. A taxa fixa de entrega de R$ 8,00 também é aplicada no back-end.
 
-## 13. Controle de versão
+## 13. Publicação
+A versão demonstrativa do front-end é publicada no GitHub Pages. O código do back-end Flask e do banco SQLite permanece disponível no repositório como parte da implementação acadêmica, pois o GitHub Pages executa apenas conteúdo estático.
+
+## 14. Controle de versão
 As melhorias, testes e correções serão registrados neste repositório por meio do histórico de commits.
