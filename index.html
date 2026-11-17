@@ -14,10 +14,10 @@ header{display:flex;justify-content:space-between;align-items:center;padding:18p
 .ico{font-size:3rem}.linha,.item{display:flex;justify-content:space-between;align-items:center;gap:12px}.acoes{display:flex;gap:6px;align-items:center}.mini{border:1px solid #dcc8d2;background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer}
 .painel{display:grid;grid-template-columns:1fr 1.15fr;gap:28px;background:#fff;border:1px solid #ead9e1;border-radius:22px;margin-bottom:35px}
 .painel form{display:grid;gap:14px}.painel label{font-weight:700;display:grid;gap:6px}.painel input,.painel textarea,.painel select{padding:11px;border:1px solid #d5c3cc;border-radius:10px;font:inherit}
-.resumo{background:#fff3f7;border:1px solid #ead9e1;border-radius:12px;padding:14px}.msg{font-weight:700;min-height:24px}.status{margin-top:10px;padding:14px;border-radius:12px;background:#f8edf2}
-.total{font-size:1.08rem}.nota{font-size:.9rem;color:#725d67}
+.resumo{background:#fff3f7;border:1px solid #ead9e1;border-radius:12px;padding:14px}.msg{font-weight:700;min-height:24px;padding:10px;border-radius:10px}.msg:empty{padding:0}.msg.ok{background:#eef8f0;color:#245c2f}.msg.erro{background:#fff0ed;color:#8a2d1f}.status{margin-top:10px;padding:14px;border-radius:12px;background:#f8edf2}.taxa{background:#fff0f5;border-radius:8px;padding:8px 10px;margin:8px 0}.confirmacao-itens{background:#fff;border:1px solid #ead9e1;border-radius:10px;padding:10px;margin:10px 0}
+.total{font-size:1.08rem}.nota{font-size:.9rem;color:#725d67}.ajuda{font-size:.82rem;color:#7b6871;font-weight:400}
 @media(max-width:900px){.grade{grid-template-columns:repeat(2,1fr)}.painel{grid-template-columns:1fr}}
-@media(max-width:600px){header{flex-direction:column;align-items:flex-start;gap:12px}.grade{grid-template-columns:1fr}.hero{margin:18px;padding:28px 20px}.secao{padding:30px 18px}.btn{width:100%}.painel form{gap:16px}}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start;gap:12px}.grade{grid-template-columns:1fr}.hero{margin:18px;padding:28px 20px}.secao{padding:30px 18px}.btn{width:100%}.painel form{gap:18px}.acoes{flex-wrap:wrap;gap:10px}.mini{padding:9px 12px;min-width:44px}.item{align-items:flex-start;gap:14px}}
 </style>
 </head>
 <body>
@@ -46,7 +46,7 @@ header{display:flex;justify-content:space-between;align-items:center;padding:18p
 </div>
 <form id="form" novalidate>
 <label>Nome<input id="nome"></label>
-<label>Telefone<input id="tel"></label>
+<label>Telefone<input id="tel" placeholder="Ex.: (11) 99999-9999" inputmode="tel"><span class="ajuda">Informe DDD e número do telefone.</span></label>
 <label>Endereço<textarea id="end"></textarea></label>
 <label>Pagamento<select id="pag"><option value="">Selecione</option><option>Pix</option><option>Cartão</option><option>Dinheiro na entrega</option></select></label>
 <div id="resumo" class="resumo">Nenhum produto no carrinho.</div>
@@ -72,7 +72,7 @@ function dinheiro(v){return 'R$ '+v.toFixed(2).replace('.',',')}
 function render(){
  grade.innerHTML=produtos.map(x=>`<article class="card"><div class="ico">${x.ico}</div><h3>${x.n}</h3><p>${x.d}</p><div class="linha"><strong>${dinheiro(x.p)}</strong><button class="btn" onclick="add(${x.id})">Adicionar</button></div></article>`).join('')
 }
-function add(id){const p=produtos.find(x=>x.id===id),a=c.get(id)||{...p,q:0};a.q++;c.set(id,a);atualiza();msg.textContent=`${p.n} adicionado ao carrinho.`}
+function mensagem(texto,tipo='ok'){msg.className=`msg ${tipo}`;msg.textContent=texto}function add(id){const p=produtos.find(x=>x.id===id),a=c.get(id)||{...p,q:0};a.q++;c.set(id,a);atualiza();mensagem(`${p.n} foi adicionado ao carrinho com sucesso.`,'ok')}
 function alterar(id,d){const a=c.get(id);if(!a)return;a.q+=d;if(a.q<=0)c.delete(id);else c.set(id,a);atualiza()}
 function remover(id){c.delete(id);atualiza()}
 function atualiza(){
@@ -81,7 +81,7 @@ function atualiza(){
  qtd.textContent=qt;
  if(!c.size){resumo.innerHTML='Nenhum produto no carrinho.';return}
  const total=subtotal+taxaEntrega;
- resumo.innerHTML=`${l.join('<hr>')}<hr><div class="item"><span>Subtotal</span><strong>${dinheiro(subtotal)}</strong></div><div class="item"><span>Taxa de entrega</span><strong>${dinheiro(taxaEntrega)}</strong></div><div class="item total"><strong>Total</strong><strong>${dinheiro(total)}</strong></div>`
+ resumo.innerHTML=`${l.join('<hr>')}<hr><div class="item"><span>Subtotal</span><strong>${dinheiro(subtotal)}</strong></div><div class="item taxa"><strong>Taxa fixa de entrega</strong><strong>${dinheiro(taxaEntrega)}</strong></div><div class="item total"><strong>Total</strong><strong>${dinheiro(total)}</strong></div>`
 }
 document.getElementById('form').onsubmit=e=>{
  e.preventDefault();
@@ -90,13 +90,16 @@ document.getElementById('form').onsubmit=e=>{
  if(!tel.value.trim())faltando.push('telefone');
  if(!end.value.trim())faltando.push('endereço');
  if(!pag.value)faltando.push('pagamento');
- if(!c.size){msg.textContent='Adicione pelo menos um produto ao carrinho antes de finalizar.';return}
- if(faltando.length){msg.textContent='Preencha os campos obrigatórios: '+faltando.join(', ')+'.';return}
+ if(!c.size){mensagem('Adicione pelo menos um produto ao carrinho antes de finalizar.','erro');return}
+ if(faltando.length){mensagem('Preencha os campos obrigatórios: '+faltando.join(', ')+'.','erro');return}
+ const telefoneLimpo=tel.value.replace(/\D/g,'');
+ if(telefoneLimpo.length<10 || telefoneLimpo.length>11){mensagem('Informe um telefone válido com DDD, por exemplo: (11) 99999-9999.','erro');return}
  let subtotal=0;c.forEach(x=>subtotal+=x.p*x.q);
+ const itensResumo=[...c.values()].map(x=>`<div class="item"><span>${x.n} x${x.q}</span><strong>${dinheiro(x.p*x.q)}</strong></div>`).join('');
  const total=subtotal+taxaEntrega;
  const numero=Math.floor(1000+Math.random()*9000);
- status.innerHTML=`<div class="status"><strong>Pedido #${numero} recebido!</strong><p>Cliente: ${nome.value.trim()}</p><p>Endereço: ${end.value.trim()}</p><p>Pagamento: ${pag.value}</p><p>Total: ${dinheiro(total)}</p><p>Status: Pedido recebido</p></div>`;
- msg.textContent='Pedido finalizado com sucesso.';
+ status.innerHTML=`<div class="status"><strong>Pedido #${numero} recebido!</strong><div class="confirmacao-itens"><strong>Itens do pedido</strong>${itensResumo}</div><p>Cliente: ${nome.value.trim()}</p><p>Endereço: ${end.value.trim()}</p><p>Pagamento: ${pag.value}</p><p>Taxa de entrega: ${dinheiro(taxaEntrega)}</p><p>Total: ${dinheiro(total)}</p><p>Status: Pedido recebido</p></div>`;
+ mensagem('Pedido finalizado com sucesso.','ok');
  c.clear();atualiza();e.target.reset()
 }
 render();atualiza();
